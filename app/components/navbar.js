@@ -58,9 +58,11 @@ export default function Navbar({ coins = 0 }) {
   const isAuthenticated = status === "authenticated" && Boolean(session?.user);
   const displayName = session?.user?.name || "Prepdom User";
   const displayEmail = session?.user?.email || "";
-  const displayCoins = isAuthenticated
-    ? Number(session?.user?.coins ?? 0)
-    : Number(coins ?? 0);
+  const displayCoins = Number(
+    isAuthenticated
+      ? (typeof coins === "number" ? coins : session?.user?.coins ?? 0)
+      : (coins ?? 0)
+  );
 
   const callbackUrl = useMemo(() => {
     const queryString = searchParams?.toString();

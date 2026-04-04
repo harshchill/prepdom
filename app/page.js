@@ -408,7 +408,7 @@ function HeroSection() {
   ];
 
   return (
-    <section className="relative min-h-screen flex items-center pt-28 pb-24 px-4 sm:px-6 lg:px-8 overflow-hidden bg-stone-50">
+    <section className="relative min-h-screen flex items-center pt-0 pb-24 px-4 sm:px-6 lg:px-8 overflow-hidden bg-stone-50">
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
