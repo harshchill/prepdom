@@ -105,7 +105,7 @@ export default function AiTutorClient() {
               Menu
             </p>
             <Link
-              href="/#library"
+              href="/user/library"
               className="flex items-center gap-2 rounded-lg px-3 py-2 text-[16px] text-white transition hover:bg-[#1b4332] hover:opacity-80"
             >
               Browse Previous Papers

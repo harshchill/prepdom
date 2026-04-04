@@ -261,7 +261,7 @@ export default async function DashboardPage({ searchParams }) {
                  </div>
               </div>
               <p className="mt-4 text-sm text-zinc-600">Dive into our massive archive of past papers and unlock the knowledge you need.</p>
-              <Link href="/#library" className="mt-6 inline-flex items-center text-sm font-bold text-blue-600 group-hover:text-blue-700">
+                <Link href="/user/library" className="mt-6 inline-flex items-center text-sm font-bold text-blue-600 group-hover:text-blue-700">
                  Browse now <ChevronRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
            </div>

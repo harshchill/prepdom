@@ -1,155 +1,538 @@
-import Link from "next/link";
-import { redirect } from "next/navigation";
-import { Crown, Mail, ShieldCheck, UserCircle2, Coins, Camera, ArrowLeft, Save } from "lucide-react";
-import { getAuthSession } from "@/lib/auth/session";
+"use client";
 
-export default async function ProfilePage() {
-  const session = await getAuthSession();
+import { useEffect, useMemo, useState } from "react";
+import { motion } from "framer-motion";
+import {
+  getUserProfile,
+  updateUserProfile,
+} from "@/app/actions/profile/profile";
 
-  if (!session?.user) {
-    redirect("/user/login?callbackUrl=/user/profile");
-  }
+const SEMESTERS = Array.from({ length: 12 }, (_, i) => i + 1);
 
-  const initials = session.user.name?.charAt(0).toUpperCase() || "U";
+// No enum in model — free-text list used as suggestions via datalist
+const PROGRAMS = [
+  "B.E. Computer Engineering",
+  "B.E. Information Technology",
+  "B.E. Electronics & Telecommunication",
+  "B.Tech Computer Science",
+  "B.Sc. Computer Science",
+  "MCA",
+  "M.Tech",
+  "Other",
+];
+
+// planTier enum from model: free | premium | premium_plus
+const PLAN_LABELS = {
+  free: "Free",
+  premium: "Premium",
+  premium_plus: "Premium+",
+};
+
+function Toast({ items, dismiss }) {
+  return (
+    <div className="fixed right-4 top-4 z-50 flex w-[320px] flex-col gap-2">
+      {items.map((item) => (
+        <div
+          key={item.id}
+          className="rounded-xl border px-4 py-3 text-sm shadow"
+          style={{
+            background: item.type === "error" ? "#fef2f2" : "#f0fdf4",
+            borderColor: item.type === "error" ? "#fecaca" : "#bbf7d0",
+            color: item.type === "error" ? "#991b1b" : "#166534",
+          }}
+        >
+          <div className="flex items-start justify-between gap-3">
+            <p>{item.message}</p>
+            <button type="button" onClick={() => dismiss(item.id)} className="text-xs opacity-70">
+              Close
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function StatCard({ label, value, accent = "#14532d" }) {
+  return (
+    <div
+      className="rounded-2xl border p-4"
+      style={{
+        borderColor: "#d7e7d9",
+        background: "#ffffff",
+        boxShadow: "0 10px 24px rgba(20,83,45,0.06)",
+      }}
+    >
+      <p className="text-[11px] uppercase tracking-[0.13em]" style={{ color: "#6b7a6b" }}>
+        {label}
+      </p>
+      <p className="mt-2 text-2xl font-extrabold" style={{ color: accent }}>
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function InputLabel({ children }) {
+  return (
+    <span
+      className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.13em]"
+      style={{ color: "#657865" }}
+    >
+      {children}
+    </span>
+  );
+}
+
+function FieldInput(props) {
+  return (
+    <input
+      {...props}
+      className="w-full rounded-xl border px-3.5 py-2.5 text-sm outline-none transition-shadow focus:shadow-[0_0_0_3px_rgba(22,101,52,0.12)]"
+      style={{ borderColor: "#d6e6d7", background: "#fff" }}
+    />
+  );
+}
+
+function FieldSelect({ children, ...props }) {
+  return (
+    <select
+      {...props}
+      className="w-full rounded-xl border px-3.5 py-2.5 text-sm outline-none transition-shadow focus:shadow-[0_0_0_3px_rgba(22,101,52,0.12)]"
+      style={{ borderColor: "#d6e6d7", background: "#fff" }}
+    >
+      {children}
+    </select>
+  );
+}
+
+/** Avatar: shows image preview if avatarUrl is a valid-looking URL, otherwise initials */
+function Avatar({ url, initials }) {
+  const [imgOk, setImgOk] = useState(false);
+
+  useEffect(() => {
+    if (!url) { setImgOk(false); return; }
+    try {
+      new URL(url); // throws if invalid
+      setImgOk(true);
+    } catch {
+      setImgOk(false);
+    }
+  }, [url]);
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(160deg,#f8fafc_0%,#ecfeff_45%,#f0fdf4_100%)] px-5 py-10 sm:px-8">
-      <main className="mx-auto w-full max-w-5xl">
-        <Link href="/user/dashboard" className="mb-6 inline-flex items-center text-sm font-semibold text-zinc-500 transition-colors hover:text-[#25671E]">
-           <ArrowLeft className="mr-1 h-4 w-4" />
-           Back to Dashboard
-        </Link>
-        
-        <div className="rounded-3xl border border-zinc-200/80 bg-white shadow-[0_8px_30px_rgba(0,0,0,0.04)] overflow-hidden">
-           <div className="grid md:grid-cols-3">
-              {/* Sidebar/Profile Card */}
-              <div className="bg-zinc-50 p-8 border-b md:border-b-0 md:border-r border-zinc-200/80 flex flex-col items-center text-center">
-                 <div className="relative group cursor-pointer mb-4">
-                    <div className="flex h-24 w-24 items-center justify-center rounded-full bg-[#25671E]/10 text-3xl font-black text-[#25671E] shadow-inner transition-all group-hover:bg-[#25671E]/20">
-                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                       {session.user.image ? (
-                          <img src={session.user.image} alt="Profile" className="h-full w-full rounded-full object-cover" />
-                       ) : (
-                          initials
-                       )}
-                    </div>
-                    <div className="absolute bottom-0 right-0 rounded-full border-2 border-white bg-zinc-900 p-1.5 text-white shadow-sm transition-transform group-hover:scale-110">
-                       <Camera className="h-3 w-3" />
-                    </div>
-                 </div>
-                 
-                 <h2 className="text-xl font-bold text-zinc-900">{session.user.name || "Student"}</h2>
-                 <p className="mt-1 flex items-center justify-center gap-1.5 text-sm font-medium text-zinc-500">
-                    <ShieldCheck className="h-4 w-4 text-zinc-400" />
-                    <span className="capitalize">{session.user.role || "student"} Account</span>
-                 </p>
-
-                 <div className="mt-8 w-full space-y-3">
-                    <div className="flex items-center justify-between rounded-xl bg-white p-3 shadow-sm border border-zinc-100">
-                       <div className="flex items-center gap-2 text-sm font-semibold text-zinc-700">
-                          <Coins className="h-4 w-4 text-[#F2B50B]" />
-                          Coins Balance
-                       </div>
-                       <span className="font-bold text-zinc-900">{session.user.coins ?? 0}</span>
-                    </div>
-                    <div className="flex items-center justify-between rounded-xl bg-white p-3 shadow-sm border border-zinc-100">
-                       <div className="flex items-center gap-2 text-sm font-semibold text-zinc-700">
-                          <Crown className="h-4 w-4 text-purple-500" />
-                          Membership
-                       </div>
-                       <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-600 capitalize">
-                          {session.user.isPremium ? "Premium" : "Free"}
-                       </span>
-                    </div>
-                 </div>
-              </div>
-
-              {/* Main Form Area */}
-              <div className="md:col-span-2 p-8 sm:p-10">
-                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight text-zinc-900">Personal Information</h1>
-                    <p className="mt-1 text-sm text-zinc-500">Update your account details and preferences.</p>
-                 </div>
-
-                 <form className="mt-8 space-y-6">
-                    <div className="grid gap-6 sm:grid-cols-2">
-                       {/* Full Name */}
-                       <div className="space-y-2 sm:col-span-2">
-                          <label htmlFor="name" className="flex items-center gap-2 text-sm font-semibold text-zinc-900">
-                             <UserCircle2 className="h-4 w-4 text-zinc-400" />
-                             Full Name
-                          </label>
-                          <input 
-                             type="text" 
-                             id="name" 
-                             defaultValue={session.user.name || ""} 
-                             className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm font-medium text-zinc-900 transition-all focus:border-[#25671E] focus:outline-none focus:ring-2 focus:ring-[#25671E]/20"
-                             placeholder="Enter your full name"
-                          />
-                       </div>
-
-                       {/* Email Address */}
-                       <div className="space-y-2 sm:col-span-2">
-                          <label htmlFor="email" className="flex items-center gap-2 text-sm font-semibold text-zinc-900">
-                             <Mail className="h-4 w-4 text-zinc-400" />
-                             Email Address
-                          </label>
-                          <div className="relative">
-                             <input 
-                                type="email" 
-                                id="email" 
-                                defaultValue={session.user.email || ""} 
-                                disabled
-                                className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm font-medium text-zinc-500 cursor-not-allowed"
-                             />
-                             <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                                <span className="rounded-md bg-zinc-200 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-zinc-500">Google Auth</span>
-                             </div>
-                          </div>
-                          <p className="text-xs text-zinc-500">Your email is managed by your Google account.</p>
-                       </div>
-
-                       {/* Referral Code */}
-                       <div className="space-y-2">
-                          <label htmlFor="referral" className="text-sm font-semibold text-zinc-900">Your Referral Code</label>
-                          <input 
-                             type="text" 
-                             id="referral" 
-                             defaultValue={session.user.referralCode || "PENDING"} 
-                             disabled
-                             className="w-full rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2.5 text-sm font-bold text-zinc-500 cursor-not-allowed uppercase tracking-widest"
-                          />
-                       </div>
-
-                       {/* Role */}
-                       <div className="space-y-2">
-                          <label htmlFor="role" className="text-sm font-semibold text-zinc-900">Primary Role</label>
-                          <select 
-                             id="role" 
-                             defaultValue={session.user.role || "student"} 
-                             className="w-full rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm font-medium text-zinc-900 transition-all focus:border-[#25671E] focus:outline-none focus:ring-2 focus:ring-[#25671E]/20"
-                          >
-                             <option value="student">Student</option>
-                             <option value="teacher">Teacher</option>
-                             <option value="admin" disabled>Admin</option>
-                          </select>
-                       </div>
-                    </div>
-
-                    <div className="mt-8 flex items-center justify-end gap-3 border-t border-zinc-100 pt-6">
-                       <button type="button" className="rounded-xl px-5 py-2.5 text-sm font-semibold text-zinc-600 transition-colors hover:bg-zinc-100">
-                          Cancel
-                       </button>
-                       <button type="button" className="inline-flex items-center gap-2 rounded-xl bg-[#25671E] px-6 py-2.5 text-sm font-bold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-[#1e5618] hover:shadow-md active:scale-95">
-                          <Save className="h-4 w-4" />
-                          Save Changes
-                       </button>
-                    </div>
-                 </form>
-              </div>
-           </div>
-        </div>
-      </main>
+    <div className="h-16 w-16 overflow-hidden rounded-2xl border-2 border-[#86efac] bg-[#1b6537] text-xl font-black text-white grid place-items-center shrink-0">
+      {imgOk ? (
+        <img
+          src={url}
+          alt="avatar"
+          className="h-full w-full object-cover"
+          onError={() => setImgOk(false)}
+        />
+      ) : (
+        initials || "U"
+      )}
     </div>
+  );
+}
+
+export default function ProfilePage() {
+  const [profile, setProfile] = useState(null);
+  const [form, setForm] = useState({
+    name: "",
+    avatarUrl: "",      // stored as plain string in model (no special type)
+    university: "",     // maxlength: 120
+    program: "",        // maxlength: 120, no enum — free text
+    specialization: "", // maxlength: 120
+    semester: 1,        // Number, min:1 max:12
+  });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [toasts, setToasts] = useState([]);
+
+  const addToast = (message, type = "success") => {
+    const id = Date.now() + Math.random();
+    setToasts((prev) => [...prev, { id, message, type }]);
+    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3500);
+  };
+
+  useEffect(() => {
+    (async () => {
+      setLoading(true);
+      const res = await getUserProfile();
+      if (!res.success) {
+        addToast(res.error || "Failed to load profile", "error");
+        setLoading(false);
+        return;
+      }
+      setProfile(res.data);
+      setForm({
+        name: res.data.name || "",
+        avatarUrl: res.data.avatarUrl || "",
+        university: res.data.university || "",
+        program: res.data.program || "",
+        specialization: res.data.specialization || "",
+        semester: res.data.semester || 1,
+      });
+      setLoading(false);
+    })();
+  }, []);
+
+  const isDirty = useMemo(() => {
+    if (!profile) return false;
+    return (
+      form.name !== (profile.name || "") ||
+      form.avatarUrl !== (profile.avatarUrl || "") ||
+      form.university !== (profile.university || "") ||
+      form.program !== (profile.program || "") ||
+      form.specialization !== (profile.specialization || "") ||
+      Number(form.semester) !== Number(profile.semester || 1)
+    );
+  }, [form, profile]);
+
+  const initials = useMemo(() => {
+    const source = form.name || profile?.name || "U";
+    return source
+      .split(" ")
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((p) => p[0]?.toUpperCase())
+      .join("");
+  }, [form.name, profile?.name]);
+
+  const onChange = (field) => (e) =>
+    setForm((prev) => ({ ...prev, [field]: e.target.value }));
+
+  const onSave = async () => {
+    // Client-side guard matching server validation
+    if (!form.name.trim()) {
+      addToast("Name is required", "error");
+      return;
+    }
+    const sem = Number(form.semester);
+    if (!Number.isInteger(sem) || sem < 1 || sem > 12) {
+      addToast("Semester must be between 1 and 12", "error");
+      return;
+    }
+
+    setSaving(true);
+    const res = await updateUserProfile({ ...form, semester: sem });
+    setSaving(false);
+
+    if (!res.success) {
+      addToast(res.error || "Failed to update profile", "error");
+      return;
+    }
+    setProfile((prev) => ({ ...prev, ...res.data }));
+    addToast("Profile updated successfully");
+  };
+
+  const onDiscard = () => {
+    if (!profile) return;
+    setForm({
+      name: profile.name || "",
+      avatarUrl: profile.avatarUrl || "",
+      university: profile.university || "",
+      program: profile.program || "",
+      specialization: profile.specialization || "",
+      semester: profile.semester || 1,
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen grid place-items-center" style={{ background: "#f3f7f3" }}>
+        <p className="text-sm font-semibold" style={{ color: "#4b5f4b" }}>
+          Loading profile...
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className="min-h-screen px-4 pb-12 pt-8 sm:px-6 lg:px-8"
+      style={{
+        background:
+          "radial-gradient(circle at right top, rgba(163,230,53,0.18), transparent 35%), radial-gradient(circle at left bottom, rgba(37,103,30,0.08), transparent 40%), #f3f7f3",
+      }}
+    >
+      <Toast items={toasts} dismiss={(id) => setToasts((prev) => prev.filter((t) => t.id !== id))} />
+
+      <div className="mx-auto max-w-6xl">
+        {/* Page header */}
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+          <h1 className="text-3xl font-extrabold tracking-tight" style={{ color: "#143d21" }}>
+            Profile
+          </h1>
+          <p className="mt-1 text-sm" style={{ color: "#5d7160" }}>
+            Manage your account details and academic information.
+          </p>
+        </motion.div>
+
+        {/* Hero banner */}
+        <motion.section
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-5 rounded-3xl border px-5 py-5 sm:px-6"
+          style={{
+            borderColor: "#cfe1d0",
+            background: "linear-gradient(130deg, #0f2f19 0%, #14532d 55%, #166534 100%)",
+            boxShadow: "0 18px 36px rgba(20,83,45,0.24)",
+          }}
+        >
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-4">
+              <Avatar url={form.avatarUrl} initials={initials} />
+              <div>
+                <p className="text-xs uppercase tracking-[0.14em] text-[#cde8d0]">Welcome Back</p>
+                <h2 className="text-2xl font-bold text-white">{form.name || "Student"}</h2>
+                <p className="text-sm text-[#dcfce7]">{profile?.email}</p>
+              </div>
+            </div>
+            <div className="rounded-2xl border border-[#86efac]/40 bg-[#0f2f19]/35 px-4 py-3">
+              <p className="text-xs uppercase tracking-[0.13em] text-[#cde8d0]">Referral Code</p>
+              {/* referralCode is stored uppercase in model */}
+              <p className="mt-1 text-lg font-extrabold text-[#fef3c7]">
+                {profile?.referralCode || "—"}
+              </p>
+            </div>
+          </div>
+        </motion.section>
+
+        {/* Stat cards */}
+        <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <StatCard label="Coins" value={profile?.coins ?? 0} accent="#a16207" />
+          {/* Use friendly label from planTier enum */}
+          <StatCard
+            label="Plan"
+            value={PLAN_LABELS[profile?.planTier] ?? (profile?.planTier || "Free")}
+          />
+          {/* role enum: student | admin */}
+          <StatCard label="Role" value={(profile?.role || "student").toUpperCase()} />
+          <StatCard label="Semester" value={form.semester || 1} accent="#166534" />
+        </div>
+
+        <div className="grid gap-5 lg:grid-cols-[1.45fr,1fr]">
+          {/* Edit form */}
+          <motion.section
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-3xl border bg-white p-5 shadow-sm"
+            style={{ borderColor: "#d6e6d7", boxShadow: "0 14px 28px rgba(20,83,45,0.08)" }}
+          >
+            <h2 className="mb-4 text-lg font-bold" style={{ color: "#1b3f24" }}>
+              Profile Details
+            </h2>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              {/* name — required per model */}
+              <label className="sm:col-span-2">
+                <InputLabel>Name *</InputLabel>
+                <FieldInput
+                  value={form.name}
+                  onChange={onChange("name")}
+                  placeholder="Your full name"
+                  required
+                />
+              </label>
+
+              {/* avatarUrl — plain string in model, show live preview hint */}
+              <label className="sm:col-span-2">
+                <InputLabel>Avatar URL</InputLabel>
+                <FieldInput
+                  value={form.avatarUrl}
+                  onChange={onChange("avatarUrl")}
+                  placeholder="https://example.com/photo.jpg"
+                  type="url"
+                />
+                {form.avatarUrl && (
+                  <p className="mt-1 text-[11px]" style={{ color: "#6b7a6b" }}>
+                    Preview updates in the banner above.
+                  </p>
+                )}
+              </label>
+
+              {/* university — maxlength: 120 */}
+              <label className="sm:col-span-2">
+                <InputLabel>University</InputLabel>
+                <FieldInput
+                  value={form.university}
+                  onChange={onChange("university")}
+                  placeholder="Your university"
+                  maxLength={120}
+                />
+              </label>
+
+              {/* program — no enum in model (free text, maxlength: 120); datalist for suggestions */}
+              <label>
+                <InputLabel>Program</InputLabel>
+                <input
+                  list="program-suggestions"
+                  value={form.program}
+                  onChange={onChange("program")}
+                  placeholder="Type or select…"
+                  maxLength={120}
+                  className="w-full rounded-xl border px-3.5 py-2.5 text-sm outline-none transition-shadow focus:shadow-[0_0_0_3px_rgba(22,101,52,0.12)]"
+                  style={{ borderColor: "#d6e6d7", background: "#fff" }}
+                />
+                <datalist id="program-suggestions">
+                  {PROGRAMS.map((p) => <option key={p} value={p} />)}
+                </datalist>
+              </label>
+
+              {/* semester — Number, min:1 max:12 */}
+              <label>
+                <InputLabel>Semester</InputLabel>
+                <FieldSelect value={form.semester} onChange={onChange("semester")}>
+                  {SEMESTERS.map((sem) => (
+                    <option key={sem} value={sem}>
+                      Semester {sem}
+                    </option>
+                  ))}
+                </FieldSelect>
+              </label>
+
+              {/* specialization — maxlength: 120 */}
+              <label className="sm:col-span-2">
+                <InputLabel>Specialization</InputLabel>
+                <FieldInput
+                  value={form.specialization}
+                  onChange={onChange("specialization")}
+                  placeholder="Optional (e.g. AI & ML)"
+                  maxLength={120}
+                />
+              </label>
+            </div>
+
+            <div className="mt-5 flex flex-wrap items-center gap-3">
+              {isDirty && (
+                <button
+                  type="button"
+                  onClick={onDiscard}
+                  className="rounded-xl border px-4 py-2 text-sm font-semibold"
+                  style={{ borderColor: "#c6d8c8", color: "#35503a", background: "#fff" }}
+                >
+                  Discard
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={onSave}
+                disabled={!isDirty || saving}
+                className="rounded-xl px-5 py-2 text-sm font-bold text-white disabled:opacity-40"
+                style={{ background: "linear-gradient(135deg, #14532d, #166534)" }}
+              >
+                {saving ? "Saving…" : "Save Changes"}
+              </button>
+            </div>
+          </motion.section>
+
+          {/* Sidebar */}
+          <motion.aside
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+            className="space-y-5"
+          >
+            {/* Account snapshot */}
+            <div
+              className="rounded-3xl border bg-white p-5"
+              style={{ borderColor: "#d6e6d7", boxShadow: "0 14px 28px rgba(20,83,45,0.08)" }}
+            >
+              <p
+                className="text-[11px] font-semibold uppercase tracking-[0.13em]"
+                style={{ color: "#6b7a6b" }}
+              >
+                Account Snapshot
+              </p>
+              <div className="mt-4 space-y-3 text-sm">
+                <SnapshotRow label="Email" value={profile?.email} />
+                {/* referralCode stored uppercase, sparse unique */}
+                <SnapshotRow label="Referral Code" value={profile?.referralCode || "—"} />
+                <SnapshotRow
+                  label="Last Login"
+                  value={
+                    profile?.lastLoginAt
+                      ? new Date(profile.lastLoginAt).toLocaleString()
+                      : "—"
+                  }
+                />
+                {/* referredBy is ObjectId ref; server returns null or string id */}
+                <SnapshotRow
+                  label="Referred By"
+                  value={profile?.referredBy ? "Linked" : "Direct signup"}
+                />
+              </div>
+            </div>
+
+            {/* Account status */}
+            <div
+              className="rounded-3xl border p-5"
+              style={{
+                borderColor: "#fde68a",
+                background: "#fffbeb",
+                boxShadow: "0 12px 24px rgba(161,98,7,0.1)",
+              }}
+            >
+              <p
+                className="text-[11px] font-semibold uppercase tracking-[0.13em]"
+                style={{ color: "#92400e" }}
+              >
+                Account Status
+              </p>
+               {/* planTier enum from model: free | premium | premium_plus */}
+              <StatusRow
+                label="Plan"
+                value={PLAN_LABELS[profile?.planTier] ?? (profile?.planTier || "Free")}
+              />
+              {/* isPremium Boolean */}
+              <StatusRow
+                label="Premium"
+                value={profile?.isPremium ? "Active" : "Not active"}
+              />
+              {/* role enum: student | admin */}
+              <StatusRow
+                label="Role"
+                value={profile?.role
+                  ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1)
+                  : "Student"}
+              />
+              {/* createdAt from timestamps:true */}
+              <StatusRow
+                label="Member since"
+                value={
+                  profile?.createdAt
+                    ? new Date(profile.createdAt).toLocaleDateString()
+                    : "—"
+                }
+              />
+            </div>
+          </motion.aside>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SnapshotRow({ label, value }) {
+  return (
+    <div
+      className="rounded-xl border px-3 py-2"
+      style={{ borderColor: "#e1ece2", background: "#fbfdfb" }}
+    >
+      <p style={{ color: "#6b7a6b" }}>{label}</p>
+      <p className="font-semibold break-all" style={{ color: "#173e25" }}>
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function StatusRow({ label, value }) {
+  return (
+    <p className="mt-2 text-sm" style={{ color: "#78350f" }}>
+      <span className="font-semibold">{label}:</span> {value}
+    </p>
   );
 }
