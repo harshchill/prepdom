@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 
 export async function proxy(request) {
+  const pathname = request.nextUrl.pathname;
+
+  if (pathname.startsWith("/user/login")) {
+    return NextResponse.next();
+  }
+
   const token = await getToken({
     req: request,
     secret: process.env.NEXTAUTH_SECRET,
@@ -9,7 +15,8 @@ export async function proxy(request) {
 
   if (!token) {
     const loginUrl = new URL("/user/login", request.url);
-    loginUrl.searchParams.set("callbackUrl", request.nextUrl.pathname);
+    const callbackUrl = `${request.nextUrl.pathname}${request.nextUrl.search}`;
+    loginUrl.searchParams.set("callbackUrl", callbackUrl || "/");
     return NextResponse.redirect(loginUrl);
   }
 
@@ -17,5 +24,5 @@ export async function proxy(request) {
 }
 
 export const config = {
-  matcher: ["/user/dashboard/:path*"],
+  matcher: ["/user/:path*"],
 };
