@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { purchaseCoins } from "@/app/actions/wallet/coin";
 
@@ -8,34 +8,74 @@ const CoinSVG = ({ size = 40 }) => (
   <svg width={size} height={size} viewBox="0 0 38 38" fill="none">
     <circle cx="19" cy="19" r="19" fill="#F2B50B" />
     <circle cx="19" cy="19" r="15" fill="#F9CC3E" />
-    <circle cx="19" cy="19" r="11" fill="#F2B50B" stroke="#C98A00" strokeWidth="1" />
-    <text x="19" y="24" textAnchor="middle" fontSize="11" fontWeight="bold" fill="#7A4F00" fontFamily="DM Sans, sans-serif">V</text>
+    <circle
+      cx="19"
+      cy="19"
+      r="11"
+      fill="#F2B50B"
+      stroke="#C98A00"
+      strokeWidth="1"
+    />
+    <text
+      x="19"
+      y="24"
+      textAnchor="middle"
+      fontSize="11"
+      fontWeight="bold"
+      fill="#7A4F00"
+      fontFamily="DM Sans, sans-serif"
+    >
+      V
+    </text>
   </svg>
 );
 
 const ArrowUpSVG = () => (
   <svg width="28" height="28" viewBox="0 0 26 26" fill="none">
     <circle cx="13" cy="13" r="13" fill="#dcfce7" />
-    <path d="M13 17V9M9 13l4-4 4 4" stroke="#16a34a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <path
+      d="M13 17V9M9 13l4-4 4 4"
+      stroke="#16a34a"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
   </svg>
 );
 
 const ArrowDownSVG = () => (
   <svg width="28" height="28" viewBox="0 0 26 26" fill="none">
     <circle cx="13" cy="13" r="13" fill="#fee2e2" />
-    <path d="M13 9v8M9 13l4 4 4-4" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <path
+      d="M13 9v8M9 13l4 4 4-4"
+      stroke="#dc2626"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
   </svg>
 );
 
 const CloseSVG = () => (
   <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
-    <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    <path
+      d="M18 6L6 18M6 6l12 12"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+    />
   </svg>
 );
 
 const UploadSVG = ({ size = 16 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <path
+      d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
   </svg>
 );
 
@@ -44,7 +84,11 @@ const ShareSVG = ({ size = 16 }) => (
     <circle cx="18" cy="5" r="3" stroke="currentColor" strokeWidth="2" />
     <circle cx="6" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
     <circle cx="18" cy="19" r="3" stroke="currentColor" strokeWidth="2" />
-    <path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98" stroke="currentColor" strokeWidth="2" />
+    <path
+      d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"
+      stroke="currentColor"
+      strokeWidth="2"
+    />
   </svg>
 );
 
@@ -56,22 +100,57 @@ const StarSVG = ({ size = 16 }) => (
 
 const GiftSVG = ({ size = 16 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-    <rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" strokeWidth="2" />
-    <path d="M12 11V22M3 7h18v4H3z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    <path d="M12 7s-2-5 2-5 2 5 2 5M12 7s2-5-2-5-2 5-2 5" stroke="currentColor" strokeWidth="1.5" />
+    <rect
+      x="3"
+      y="11"
+      width="18"
+      height="11"
+      rx="2"
+      stroke="currentColor"
+      strokeWidth="2"
+    />
+    <path
+      d="M12 11V22M3 7h18v4H3z"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+    />
+    <path
+      d="M12 7s-2-5 2-5 2 5 2 5M12 7s2-5-2-5-2 5-2 5"
+      stroke="currentColor"
+      strokeWidth="1.5"
+    />
   </svg>
 );
 
 const ShieldSVG = ({ size = 18 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <path
+      d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M9 12l2 2 4-4"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
   </svg>
 );
 
 const CheckSVG = ({ size = 13 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-    <path d="M20 6L9 17l-5-5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path
+      d="M20 6L9 17l-5-5"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
   </svg>
 );
 
@@ -88,10 +167,30 @@ const PACKS = [
 ];
 
 const HOW_IT_WORKS = [
-  { icon: <GiftSVG />, title: "Signup Bonus", desc: "Get 100 coins free on joining", reward: "+100" },
-  { icon: <UploadSVG />, title: "Upload Papers", desc: "20-50 coins per approved paper", reward: "+20-50" },
-  { icon: <ShareSVG />, title: "Refer Friends", desc: "50 coins each when a friend joins", reward: "+50" },
-  { icon: <StarSVG />, title: "Daily Login", desc: "Streak bonuses up to 10 coins/day", reward: "+2-10" },
+  {
+    icon: <GiftSVG />,
+    title: "Signup Bonus",
+    desc: "Get 100 coins free on joining",
+    reward: "+100",
+  },
+  {
+    icon: <UploadSVG />,
+    title: "Upload Papers",
+    desc: "20-50 coins per approved paper",
+    reward: "+20-50",
+  },
+  {
+    icon: <ShareSVG />,
+    title: "Refer Friends",
+    desc: "50 coins each when a friend joins",
+    reward: "+50",
+  },
+  {
+    icon: <StarSVG />,
+    title: "Daily Login",
+    desc: "Streak bonuses up to 10 coins/day",
+    reward: "+2-10",
+  },
 ];
 
 const PREMIUM_PERKS = [
@@ -123,7 +222,11 @@ function Toast({ toasts, remove }) {
             }}
           >
             <span className="flex-1">{t.message}</span>
-            <button onClick={() => remove(t.id)} className="opacity-40 hover:opacity-80 transition-opacity" aria-label="close toast">
+            <button
+              onClick={() => remove(t.id)}
+              className="opacity-40 hover:opacity-80 transition-opacity"
+              aria-label="close toast"
+            >
               <CloseSVG />
             </button>
           </motion.div>
@@ -145,45 +248,104 @@ export default function WalletClient({
   const [toasts, setToasts] = useState([]);
   const tid = useRef(0);
 
-  const addToast = (message, type = "success") => {
-    const id = ++tid.current;
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3500);
-  };
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    document.body.appendChild(script);
+    return () => {
+      if (document.body.contains(script)) {
+        document.body.removeChild(script);
+      }
+    };
+  }, []);
+
+  // ... existing code ...
 
   const handleBuy = async (pack, idx) => {
     if (buying !== null) return;
 
     setBuying(idx);
     try {
-      const result = await purchaseCoins(pack);
-      setCoins(result.newBalance);
-      setTransactions((prev) => [
-        {
-          id: result.transaction.id,
-          type: result.transaction.type,
-          reason: result.transaction.reason,
-          amount: result.transaction.amount,
-          balanceAfter: result.transaction.balanceAfter,
-          createdAt: result.transaction.createdAt,
-          paper: null,
-          unlock: null,
+      // Create Razorpay order
+      const orderRes = await fetch("/api/Razorpay/order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: pack.price * 1,
+          type: "coin",
+          coins: pack.coins,
+        }),
+      });
+      const order = await orderRes.json();
+      if (!order.id) {
+        throw new Error("Failed to create order");
+      }
+
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: order.amount,
+        currency: order.currency,
+        order_id: order.id,
+        name: "Prepdom",
+        description: `Purchase ${pack.coins} coins`,
+        handler: async (response) => {
+          // Verify payment
+          const verifyRes = await fetch("/api/Razorpay/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              coins: pack.coins,
+            }),
+          });
+          const verifyData = await verifyRes.json();
+          if (verifyData.success) {
+            setCoins(verifyData.newBalance);
+            setTransactions((prev) => [
+              {
+                id: verifyData.transaction.id,
+                type: verifyData.transaction.type,
+                reason: verifyData.transaction.reason,
+                amount: verifyData.transaction.amount,
+                balanceAfter: verifyData.transaction.balanceAfter,
+                createdAt: verifyData.transaction.createdAt,
+                paper: null,
+                unlock: null,
+              },
+              ...prev,
+            ]);
+            addToast("Purchase successful");
+          } else {
+            addToast("Payment verification failed", "error");
+          }
+          setBuying(null);
         },
-        ...prev,
-      ]);
-      addToast(result.message);
+        prefill: {
+          // Add user details if available, e.g., name, email
+        },
+        theme: {
+          color: "#25671e",
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
     } catch (error) {
       addToast(error.message || "Purchase failed", "error");
-    } finally {
       setBuying(null);
     }
   };
+
+  // ... existing code ...
 
   const formatTransaction = (tx) => {
     const date = new Date(tx.createdAt);
     const now = new Date();
     const diffTime = Math.abs(now - date);
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const diffDays = Math.floor(diffTime / (100 * 60 * 60 * 24));
 
     let sub;
     if (diffDays === 0) {
@@ -228,7 +390,9 @@ export default function WalletClient({
   };
 
   const formattedTransactions = transactions.map(formatTransaction);
-  const creditCount = formattedTransactions.filter((tx) => tx.amount > 0).length;
+  const creditCount = formattedTransactions.filter(
+    (tx) => tx.amount > 0,
+  ).length;
   const debitCount = formattedTransactions.filter((tx) => tx.amount < 0).length;
   const totalEarned = formattedTransactions
     .filter((tx) => tx.amount > 0)
@@ -236,7 +400,8 @@ export default function WalletClient({
   const totalSpent = formattedTransactions
     .filter((tx) => tx.amount < 0)
     .reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
-  const totalTransactions = initialStats.totalTransactions ?? transactions.length;
+  const totalTransactions =
+    initialStats.totalTransactions ?? transactions.length;
   const creditCountDisplay = initialStats.creditCount ?? creditCount;
   const debitCountDisplay = initialStats.debitCount ?? debitCount;
   const totalEarnedDisplay = initialStats.totalEarned ?? totalEarned;
@@ -294,7 +459,7 @@ export default function WalletClient({
         .panel {
           background: var(--wallet-card);
           border: 1px solid rgba(17, 17, 17, 0.05);
-          box-shadow: 0 12px 32px rgba(17, 24, 39, 0.05);
+          box-shadow: 0 12px 32px rgba(17, 17, 39, 0.05);
           border-radius: 18px;
         }
 
@@ -621,22 +786,29 @@ export default function WalletClient({
         }
       `}</style>
 
-      <Toast toasts={toasts} remove={(id) => setToasts((prev) => prev.filter((t) => t.id !== id))} />
+      <Toast
+        toasts={toasts}
+        remove={(id) => setToasts((prev) => prev.filter((t) => t.id !== id))}
+      />
 
       <div className="wallet-shell">
         <div className="wallet-wrap">
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.28 }}>
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.28 }}
+          >
             <h1 className="title">Coin Wallet</h1>
-            <p className="muted">Manage your coins, top up instantly, and keep track of every activity.</p>
+            <p className="muted">
+              Manage your coins, top up instantly, and keep track of every
+              activity.
+            </p>
           </motion.div>
 
           <div style={{ height: 16 }} />
 
           <div className="wallet-grid">
-
-
             <div className="stack">
-
               <motion.div
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -650,26 +822,44 @@ export default function WalletClient({
                   justifyContent: "flex-start",
                   alignItems: "center",
                   gap: 16,
-                  
+
                   marginRight: "auto",
                   marginLeft: 0,
                   maxWidth: "fit-content",
                 }}
               >
-                <div style={{
-                  width: 38, height: 38, borderRadius: 10, flexShrink: 0,
-                  background: "#fef3c7", display: "flex", alignItems: "center", justifyContent: "flex-start",
-                  color: "#d97706",
-                }}>
+                <div
+                  style={{
+                    width: 38,
+                    height: 38,
+                    borderRadius: 10,
+                    flexShrink: 0,
+                    background: "#fef3c7",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "flex-start",
+                    color: "#d97706",
+                  }}
+                >
                   <StarSVG size={17} />
                 </div>
                 <div>
-                  <p style={{ fontSize: 14, fontWeight: 700, color: "#92400e", marginBottom: 3 }}>
-                    {coins} coins = {Math.floor(coins / 9)} papers ready to unlock
+                  <p
+                    style={{
+                      fontSize: 14,
+                      fontWeight: 700,
+                      color: "#92400e",
+                      marginBottom: 3,
+                    }}
+                  >
+                    {coins} coins = {Math.floor(coins / 9)} papers ready to
+                    unlock
                   </p>
                   <p style={{ fontSize: 13, color: "#a16207" }}>
                     That&apos;s a full revision set -{" "}
-                    <strong style={{ color: "#92400e" }}>start unlocking before your exam week hits.</strong>
+                    <strong style={{ color: "#92400e" }}>
+                      start unlocking before your exam week hits.
+                    </strong>
                   </p>
                 </div>
               </motion.div>
@@ -680,15 +870,38 @@ export default function WalletClient({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.32 }}
               >
-                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 14, position: "relative", zIndex: 1 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    justifyContent: "space-between",
+                    gap: 14,
+                    position: "relative",
+                    zIndex: 1,
+                  }}
+                >
                   <div>
-                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <div
+                      style={{ display: "flex", alignItems: "center", gap: 12 }}
+                    >
                       <CoinSVG size={42} />
-                      <span className="balance-value">{coins.toLocaleString()}</span>
+                      <span className="balance-value">
+                        {coins.toLocaleString()}
+                      </span>
                     </div>
-                    <p style={{ marginTop: 10, color: "#d1d5db", fontSize: 14 }}>Available Coins</p>
+                    <p
+                      style={{
+                        marginTop: 10,
+                        color: "#d1d5db",
+                        fontSize: 14,
+                      }}
+                    >
+                      Available Coins
+                    </p>
                   </div>
-                  <button className="vault-btn" type="button">Vault Active</button>
+                  <button className="vault-btn" type="button">
+                    Vault Active
+                  </button>
                 </div>
               </motion.section>
 
@@ -730,21 +943,36 @@ export default function WalletClient({
                   </div>
                 </div>
                 <div className="trust-card" style={{ marginTop: 12 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#25671e", fontWeight: 700, marginBottom: 2 }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      color: "#25671e",
+                      fontWeight: 700,
+                      marginBottom: 2,
+                    }}
+                  >
                     <ShieldSVG size={16} />
                     <span>Wallet Status</span>
                   </div>
                   <div className="trust-row">
                     <span style={{ color: "#4b5563" }}>Plan</span>
-                    <strong style={{ color: "#166534" }}>{premiumStatus}</strong>
+                    <strong style={{ color: "#166534" }}>
+                      {premiumStatus}
+                    </strong>
                   </div>
                   <div className="trust-row">
                     <span style={{ color: "#4b5563" }}>Credits</span>
-                    <strong style={{ color: "#166534" }}>{creditCountDisplay}</strong>
+                    <strong style={{ color: "#166534" }}>
+                      {creditCountDisplay}
+                    </strong>
                   </div>
                   <div className="trust-row">
                     <span style={{ color: "#4b5563" }}>Debits</span>
-                    <strong style={{ color: "#166534" }}>{debitCountDisplay}</strong>
+                    <strong style={{ color: "#166534" }}>
+                      {debitCountDisplay}
+                    </strong>
                   </div>
                 </div>
               </motion.section>
@@ -760,23 +988,65 @@ export default function WalletClient({
                   {formattedTransactions.length > 0 ? (
                     formattedTransactions.map((tx) => (
                       <div key={tx.id} className="tx-row">
-                        <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 10,
+                            minWidth: 0,
+                          }}
+                        >
                           {tx.type === "up" ? <ArrowUpSVG /> : <ArrowDownSVG />}
                           <div style={{ minWidth: 0 }}>
-                            <p style={{ margin: 0, color: "#111827", fontSize: 14, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{tx.label}</p>
-                            <p style={{ margin: "3px 0 0", color: "#6b7280", fontSize: 12 }}>{tx.sub}</p>
+                            <p
+                              style={{
+                                margin: 0,
+                                color: "#111827",
+                                fontSize: 14,
+                                fontWeight: 600,
+                                whiteSpace: "nowrap",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                              }}
+                            >
+                              {tx.label}
+                            </p>
+                            <p
+                              style={{
+                                margin: "3px 0 0",
+                                color: "#6b7280",
+                                fontSize: 12,
+                              }}
+                            >
+                              {tx.sub}
+                            </p>
                           </div>
                         </div>
-                        <span className="tx-amount" style={{ color: tx.amount > 0 ? "#16a34a" : "#dc2626" }}>
+                        <span
+                          className="tx-amount"
+                          style={{
+                            color: tx.amount > 0 ? "#16a34a" : "#dc2626",
+                          }}
+                        >
                           {tx.amount > 0 ? "+" : ""}
                           {tx.amount}
                         </span>
                       </div>
                     ))
                   ) : (
-                    <div style={{ textAlign: "center", padding: "36px 12px", color: "#6b7280" }}>
-                      <p style={{ margin: 0, fontSize: 14 }}>No transactions yet</p>
-                      <p style={{ margin: "4px 0 0", fontSize: 12 }}>Your coin activity will appear here</p>
+                    <div
+                      style={{
+                        textAlign: "center",
+                        padding: "36px 12px",
+                        color: "#6b7280",
+                      }}
+                    >
+                      <p style={{ margin: 0, fontSize: 14 }}>
+                        No transactions yet
+                      </p>
+                      <p style={{ margin: "4px 0 0", fontSize: 12 }}>
+                        Your coin activity will appear here
+                      </p>
                     </div>
                   )}
                 </div>
@@ -791,7 +1061,9 @@ export default function WalletClient({
                 transition={{ duration: 0.42 }}
               >
                 <h2>Buy Coins</h2>
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <div
+                  style={{ display: "flex", flexDirection: "column", gap: 10 }}
+                >
                   {PACKS.map((pack, idx) => (
                     <button
                       key={pack.coins}
@@ -801,15 +1073,55 @@ export default function WalletClient({
                       disabled={buying !== null}
                     >
                       {pack.best && <span className="badge">BEST VALUE</span>}
-                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          gap: 10,
+                        }}
+                      >
                         <div>
-                          <p style={{ margin: 0, color: "#111827", fontWeight: 700, fontSize: 16 }}>{pack.coins} Coins</p>
-                          <p style={{ margin: "3px 0 0", color: "#6b7280", fontSize: 12 }}>{pack.rate}</p>
+                          <p
+                            style={{
+                              margin: 0,
+                              color: "#111827",
+                              fontWeight: 700,
+                              fontSize: 16,
+                            }}
+                          >
+                            {pack.coins} Coins
+                          </p>
+                          <p
+                            style={{
+                              margin: "3px 0 0",
+                              color: "#6b7280",
+                              fontSize: 12,
+                            }}
+                          >
+                            {pack.rate}
+                          </p>
                         </div>
                         <div style={{ textAlign: "right" }}>
-                          <p style={{ margin: 0, color: "#111827", fontWeight: 800, fontSize: 18 }}>Rs {pack.price}</p>
+                          <p
+                            style={{
+                              margin: 0,
+                              color: "#111827",
+                              fontWeight: 800,
+                              fontSize: 18,
+                            }}
+                          >
+                            Rs {pack.price}
+                          </p>
                           {buying === idx && (
-                            <span className="spin" style={{ display: "inline-flex", marginTop: 4, color: "#25671e" }}>
+                            <span
+                              className="spin"
+                              style={{
+                                display: "inline-flex",
+                                marginTop: 4,
+                                color: "#25671e",
+                              }}
+                            >
                               <ZapSVG size={15} />
                             </span>
                           )}
@@ -818,7 +1130,14 @@ export default function WalletClient({
                     </button>
                   ))}
                 </div>
-                <p style={{ margin: "12px 0 0", color: "#6b7280", fontSize: 11, textAlign: "center" }}>
+                <p
+                  style={{
+                    margin: "12px 0 0",
+                    color: "#6b7280",
+                    fontSize: 11,
+                    textAlign: "center",
+                  }}
+                >
                   Secure payment powered by Razorpay
                 </p>
               </motion.section>
@@ -830,13 +1149,33 @@ export default function WalletClient({
                 transition={{ duration: 0.46 }}
               >
                 <h2>How To Earn Coins</h2>
-                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <div
+                  style={{ display: "flex", flexDirection: "column", gap: 6 }}
+                >
                   {HOW_IT_WORKS.map((item) => (
                     <div className="earn-row" key={item.title}>
                       <div className="earn-icon">{item.icon}</div>
                       <div style={{ minWidth: 0 }}>
-                        <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: "#111827" }}>{item.title}</p>
-                        <p style={{ margin: "2px 0 0", fontSize: 12, color: "#6b7280", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        <p
+                          style={{
+                            margin: 0,
+                            fontSize: 13,
+                            fontWeight: 600,
+                            color: "#111827",
+                          }}
+                        >
+                          {item.title}
+                        </p>
+                        <p
+                          style={{
+                            margin: "2px 0 0",
+                            fontSize: 12,
+                            color: "#6b7280",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
                           {item.desc}
                         </p>
                       </div>
@@ -852,7 +1191,14 @@ export default function WalletClient({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    marginBottom: 14,
+                  }}
+                >
                   <ShieldSVG />
                   <h2 style={{ margin: 0, color: "#f8fafc" }}>Premium Perks</h2>
                 </div>
@@ -866,9 +1212,10 @@ export default function WalletClient({
                   ))}
                 </ul>
 
-                <button type="button" className="premium-btn">Upgrade To Premium</button>
+                <button type="button" className="premium-btn">
+                  Upgrade To Premium
+                </button>
               </motion.section>
-
             </div>
           </div>
         </div>
@@ -876,4 +1223,3 @@ export default function WalletClient({
     </>
   );
 }
-
