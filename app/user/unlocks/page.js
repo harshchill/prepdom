@@ -35,8 +35,6 @@ function formatPaperMeta(paper) {
   return parts.join(" | ");
 }
 
-export const dynamic = "force-dynamic";
-
 export default async function UnlocksPage() {
   const session = await getAuthSession();
 
@@ -94,7 +92,7 @@ export default async function UnlocksPage() {
               </p>
             </div>
 
-            <div className="rounded-[24px] border border-white/80 bg-white/80 px-5 py-4 shadow-sm">
+            <div className="rounded-3xl border border-white/80 bg-white/80 px-5 py-4 shadow-sm">
               <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-zinc-500">
                 Latest unlock
               </p>
@@ -107,13 +105,13 @@ export default async function UnlocksPage() {
         </section>
 
         <section className="grid gap-4 sm:grid-cols-3">
-          <article className="rounded-[24px] border border-[#25671e]/10 bg-white p-5 shadow-[0_16px_40px_rgba(17,24,39,0.05)]">
+          <article className="rounded-3xl border border-[#25671e]/10 bg-white p-5 shadow-[0_16px_40px_rgba(17,24,39,0.05)]">
             <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-zinc-500">Unlocked papers</p>
             <p className="mt-2 text-3xl font-extrabold tracking-tight text-zinc-900">{unlocks.length}</p>
             <p className="mt-1 text-sm text-zinc-500">Premium papers currently attached to your account.</p>
           </article>
 
-          <article className="rounded-[24px] border border-[#25671e]/10 bg-white p-5 shadow-[0_16px_40px_rgba(17,24,39,0.05)]">
+          <article className="rounded-3xl border border-[#25671e]/10 bg-white p-5 shadow-[0_16px_40px_rgba(17,24,39,0.05)]">
             <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-zinc-500">Coins spent</p>
             <div className="mt-2 flex items-center gap-2">
               <Coins className="h-5 w-5 text-[#F2B50B]" />
@@ -122,7 +120,7 @@ export default async function UnlocksPage() {
             <p className="mt-1 text-sm text-zinc-500">Total coins used across your unlock history.</p>
           </article>
 
-          <article className="rounded-[24px] border border-[#25671e]/10 bg-white p-5 shadow-[0_16px_40px_rgba(17,24,39,0.05)]">
+          <article className="rounded-3xl border border-[#25671e]/10 bg-white p-5 shadow-[0_16px_40px_rgba(17,24,39,0.05)]">
             <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-zinc-500">Revision ready</p>
             <p className="mt-2 text-3xl font-extrabold tracking-tight text-zinc-900">
               {unlocks.filter((entry) => entry.isAvailable).length}
@@ -151,7 +149,7 @@ export default async function UnlocksPage() {
               {unlocks.map((entry) => (
                 <article
                   key={entry.id}
-                  className="rounded-[24px] border border-zinc-200 bg-[linear-gradient(135deg,rgba(255,255,255,1),rgba(250,250,249,0.92))] p-5"
+                  className="rounded-3xl border border-zinc-200 bg-[linear-gradient(135deg,rgba(255,255,255,1),rgba(250,250,249,0.92))] p-5"
                 >
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div className="min-w-0 flex-1">
@@ -234,3 +232,4 @@ export default async function UnlocksPage() {
     </div>
   );
 }
+

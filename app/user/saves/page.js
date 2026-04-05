@@ -35,8 +35,6 @@ function formatPaperMeta(paper) {
   return parts.join(" | ");
 }
 
-export const dynamic = "force-dynamic";
-
 export default async function SavesPage() {
   const session = await getAuthSession();
 
@@ -94,7 +92,7 @@ export default async function SavesPage() {
               </p>
             </div>
 
-            <div className="rounded-[24px] border border-white/80 bg-white/80 px-5 py-4 shadow-sm">
+            <div className="rounded-3xl border border-white/80 bg-white/80 px-5 py-4 shadow-sm">
               <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-zinc-500">
                 Latest save
               </p>
@@ -107,13 +105,13 @@ export default async function SavesPage() {
         </section>
 
         <section className="grid gap-4 sm:grid-cols-3">
-          <article className="rounded-[24px] border border-blue-100 bg-white p-5 shadow-[0_16px_40px_rgba(17,24,39,0.05)]">
+          <article className="rounded-3xl border border-blue-100 bg-white p-5 shadow-[0_16px_40px_rgba(17,24,39,0.05)]">
             <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-zinc-500">Saved papers</p>
             <p className="mt-2 text-3xl font-extrabold tracking-tight text-zinc-900">{saves.length}</p>
             <p className="mt-1 text-sm text-zinc-500">Papers you bookmarked for later study sessions.</p>
           </article>
 
-          <article className="rounded-[24px] border border-blue-100 bg-white p-5 shadow-[0_16px_40px_rgba(17,24,39,0.05)]">
+          <article className="rounded-3xl border border-blue-100 bg-white p-5 shadow-[0_16px_40px_rgba(17,24,39,0.05)]">
             <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-zinc-500">Revision ready</p>
             <div className="mt-2 flex items-center gap-2">
               <BookmarkCheck className="h-5 w-5 text-blue-600" />
@@ -122,7 +120,7 @@ export default async function SavesPage() {
             <p className="mt-1 text-sm text-zinc-500">Saved papers that can be opened right now from the library.</p>
           </article>
 
-          <article className="rounded-[24px] border border-blue-100 bg-white p-5 shadow-[0_16px_40px_rgba(17,24,39,0.05)]">
+          <article className="rounded-3xl border border-blue-100 bg-white p-5 shadow-[0_16px_40px_rgba(17,24,39,0.05)]">
             <p className="text-[11px] font-extrabold uppercase tracking-[0.16em] text-zinc-500">Popular picks</p>
             <p className="mt-2 text-3xl font-extrabold tracking-tight text-zinc-900">{popularSavedCount}</p>
             <p className="mt-1 text-sm text-zinc-500">Saved papers that are also widely bookmarked by other students.</p>
@@ -149,7 +147,7 @@ export default async function SavesPage() {
               {saves.map((entry) => (
                 <article
                   key={entry.id}
-                  className="rounded-[24px] border border-zinc-200 bg-[linear-gradient(135deg,rgba(255,255,255,1),rgba(248,250,252,0.92))] p-5"
+                  className="rounded-3xl border border-zinc-200 bg-[linear-gradient(135deg,rgba(255,255,255,1),rgba(248,250,252,0.92))] p-5"
                 >
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div className="min-w-0 flex-1">
@@ -232,3 +230,4 @@ export default async function SavesPage() {
     </div>
   );
 }
+
