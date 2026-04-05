@@ -312,7 +312,7 @@ export default async function DashboardPage({ searchParams }) {
                    Stuck on a tricky concept? Let our AI Tutor break it down and prep you for the exam.
                   </p>
                   {canUseAiTutor ? (
-                   <Link href="/premium/ai-tutor" className="mt-6 inline-flex items-center text-sm font-bold text-teal-700 group-hover:text-teal-800">
+                   <Link href="/premium/Ai-tutor" className="mt-6 inline-flex items-center text-sm font-bold text-teal-700 group-hover:text-teal-800">
                      Start Learning <ChevronRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
                    </Link>
                   ) : (

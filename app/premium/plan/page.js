@@ -29,136 +29,273 @@ const STATUS_MESSAGES = {
     text: "Invalid plan selection. Please choose again.",
   },
 };
+"use client";
+import React, { useState } from "react";
+import Script from "next/script";
 
-export default async function PremiumPlanPage({ searchParams }) {
-  const session = await getAuthSession();
+const plans = [
+  {
+    name: "FREE",
+    price: { monthly: 0, yearly: 0 },
+    description: "Perfect for getting started",
+    color: "free",
+    features: [
+      "Browse previous papers",
+      "Get 50 coins",
+      "Unlock 5 paper",
+      "Top up coins",
+    ],
+    cta: "Use Vault for Free",
+    popular: false,
+  },
+  {
+    name: "PRO",
+    price: { monthly: 79, yearly: 799 },
+    description: "For power users & professionals",
+    color: "pro",
+    features: [
+      "Everything in the Free and:",
+      "AI tutor",
+      "Mock Paper generate",
+      "1 paper generation in Day",
+      "Priority support",
+    ],
+    cta: "Get Pro Plan",
+    popular: true,
+  },
+  {
+    name: "MAX",
+    price: { monthly: 179 },
+    description: "Built for teams & enterprises",
+    color: "max",
+    features: [
+      "Everything in Pro and:",
+      "3 paper generation in day",
+      "removes Ads",
+      "Extended thinking for complex work",
+      "Dedicated support",
+      ,
+    ],
+    cta: "Get Max Plan",
+    popular: false,
+  },
+];
 
-  if (!session?.user?.id) {
-    redirect("/user/login?callbackUrl=/premium/plan");
-  }
+const CheckIcon = () => (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 16 16"
+    fill="none"
+    className="shrink-0"
+  >
+    <circle cx="8" cy="8" r="8" fill="currentColor" fillOpacity="0.15" />
+    <path
+      d="M4.5 8L7 10.5L11.5 6"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
 
-  const resolvedSearchParams = await searchParams;
-  const status =
-    typeof resolvedSearchParams?.status === "string" ? resolvedSearchParams.status : null;
-  const statusMessage = status ? STATUS_MESSAGES[status] : null;
+export default function SubscriptionPage() {
+  const [billing, setBilling] = useState("monthly");
+  // 1. Update the function to accept the specific plan object and current billing state
+  const handlePayment = async (plan, currentBilling) => {
+    // Logic to get the correct price based on billing toggle
+    const price =
+      currentBilling === "monthly" ? plan.price.monthly : plan.price.yearly;
 
-  await connectToDatabase();
-  const user = await User.findById(session.user.id).select("isPremium planTier").lean();
-  const activeTier = resolvePlanTierFromUser(user || session.user);
-  const activeLabel = getPlanLabel(activeTier);
+    // Don't trigger Razorpay for the Free plan
+    if (price === 0) {
+      alert("You've started with the Free plan!");
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/Razorpay/order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: price }), // Sends actual plan price
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`API Error ${response.status}:`, errorText);
+        alert(`Payment failed: ${errorText}`);
+        return;
+      }
+
+      const order = await response.json();
+
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: order.amount,
+        currency: "INR",
+        name: "shubh",
+        description: `${plan.name} Subscription (${currentBilling})`,
+        order_id: order.id,
+        handler: function (response) {
+          // HACKATHON TIP: Trigger a success state or redirect
+          alert(`Payment Success! ID: ${response.razorpay_payment_id}`);
+          // window.location.href = "/success";
+        },
+        prefill: {
+          name: "Shubh Mishra",
+          email: "shubh@example.com",
+        },
+        theme: { color: "#10b981" },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (error) {
+      console.error("Payment failed", error);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(160deg,#f8fafc_0%,#ecfeff_45%,#f0fdf4_100%)] px-5 py-10 sm:px-8">
-      <main className="mx-auto w-full max-w-6xl space-y-8">
-        <header className="rounded-3xl border border-zinc-200/80 bg-white/80 p-6 shadow-[0_8px_30px_rgba(0,0,0,0.04)] backdrop-blur-xl sm:p-8">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#25671E]/70">Premium Plans</p>
-              <h1 className="mt-1 text-3xl font-extrabold tracking-tight text-zinc-900">Choose your Prepdom plan</h1>
-              <p className="mt-2 text-sm font-medium text-zinc-600">
-                Current plan: <span className="font-bold text-zinc-900">{activeLabel}</span>
-                {hasAllPapersFreeAccess(activeTier) ? " (all papers free enabled)" : ""}
-              </p>
-            </div>
-            <Link
-              href="/user/dashboard"
-              className="inline-flex items-center justify-center rounded-full border border-zinc-200 bg-white px-5 py-2 text-sm font-semibold text-zinc-700 transition hover:border-[#25671E]/30 hover:text-[#25671E]"
-            >
-              Back to Dashboard
-            </Link>
-          </div>
-        </header>
+    <div className="relative min-h-screen w-full overflow-hidden bg-[#f0fdf4] font-['DM_Sans',sans-serif] px-5 py-10 flex flex-col items-center justify-center">
+      <Script src="https://checkout.razorpay.com/v1/checkout.js" />
+      {/* Header Section */}
+      <div className="relative z-10 flex flex-col items-center mb-14 text-center">
+        <div className="flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-green-600/20 bg-green-600/10 text-green-700 text-[12px] font-semibold tracking-widest uppercase mb-5">
+          <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+          Vault Plans
+        </div>
 
-        {statusMessage && (
-          <section
-            className={`rounded-2xl border px-4 py-3 text-sm font-semibold ${
-              statusMessage.tone === "success"
-                ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                : statusMessage.tone === "error"
-                  ? "border-rose-200 bg-rose-50 text-rose-800"
-                  : "border-zinc-200 bg-zinc-50 text-zinc-700"
-            }`}
+        <h1 className="font-['Playfair_Display',serif] text-4xl md:text-6xl font-black text-green-950 leading-tight mb-3">
+          Choose Your
+          <span className="bg-gradient-to-br from-green-600 via-green-500 to-green-400 bg-clip-text text-transparent">
+            Vault
+          </span>
+        </h1>
+        <p className="text-green-800/70 text-lg font-light tracking-wide max-w-md">
+          Plans that grow with you — no hidden fees, cancel anytime.
+        </p>
+      </div>
+
+      {/* Toggle */}
+      <div className="relative z-10 flex items-center gap-1 p-1 bg-white/70 backdrop-blur-md border border-green-300/60 rounded-full shadow-lg shadow-green-500/10 mb-10">
+        <button
+          onClick={() => setBilling("monthly")}
+          className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
+            billing === "monthly"
+              ? "bg-gradient-to-br from-green-500 to-green-600 text-white shadow-md shadow-green-500/40"
+              : "text-green-800 hover:text-green-600"
+          }`}
+        >
+          Monthly
+        </button>
+      </div>
+
+      {/* Cards Grid */}
+      <div className="relative z-10 grid grid-cols-1 md:grid-cols-3 gap-6 w-full h-1/2 max-w-5xl items-stretch">
+        {plans.map((plan) => (
+          <div
+            key={plan.name}
+            className={`group relative flex flex-col p-8 rounded-[50px] transition-all duration-300 hover:-translate-y-2 cursor-pointer overflow-hidden
+              ${
+                plan.color === "pro"
+                  ? "bg-gradient-to-br from-white  to-white border border-green-400 scale-105 shadow-xl shadow-green-500/30"
+                  : plan.color === "free"
+                    ? "bg-gradient-to-br from-white to-green-50 border border-green-300/50 shadow-lg shadow-green-300/20"
+                    : "bg-gradient-to-br from-white to-white border border-green-300/45 shadow-lg shadow-green-300/20"
+              }
+              hover:shadow-2xl hover:shadow-green-500/30
+            `}
           >
-            {statusMessage.text}
-          </section>
-        )}
+            {/* Shimmer Effect */}
+            <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_3s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none" />
 
-        <section className="grid grid-cols-1 gap-5 md:grid-cols-3">
-          {PLAN_DEFINITIONS.map((plan) => {
-            const isActive = plan.id === activeTier;
-            const isRecommended = plan.id === PLAN_TIERS.PREMIUM;
-            const isTop = plan.id === PLAN_TIERS.PREMIUM_PLUS;
+            {plan.popular && (
+              <span className="absolute top-5 right-5 px-3 py-1 bg-gradient-to-br from-green-800 to-green-900 text-white text-[10px] font-bold uppercase tracking-wider rounded-full shadow-md">
+                Most Popular
+              </span>
+            )}
 
-            return (
-              <article
-                key={plan.id}
-                className={`relative flex flex-col rounded-3xl border p-6 shadow-sm transition-all sm:p-7 ${
-                  isActive
-                    ? "border-[#25671E]/40 bg-white shadow-[0_18px_45px_-25px_rgba(37,103,30,0.5)]"
-                    : "border-zinc-200/80 bg-white/80"
-                }`}
-              >
-                {isRecommended && (
-                  <div className="absolute right-4 top-4 inline-flex items-center gap-1 rounded-full border border-[#25671E]/20 bg-[#25671E]/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[#25671E]">
-                    <Star className="h-3 w-3" />
-                    Popular
-                  </div>
-                )}
 
-                {isTop && (
-                  <div className="absolute right-4 top-4 inline-flex items-center gap-1 rounded-full border border-purple-500/30 bg-purple-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-purple-700">
-                    <Crown className="h-3 w-3" />
-                    Plus
-                  </div>
-                )}
+            <h3
+              className={`font-['Playfair_Display',serif] font-bold text-sm tracking-[3px] uppercase mb-1.5
+              ${plan.color === "pro" ? "text-green-950" : plan.color === "max" ? "text-green-800" : "text-green-600"}`}
+            >
+              {plan.name}
+            </h3>
+            <p className="text-[13px] font-normal opacity-70 text-green-900 mb-6">
+              {plan.description}
+            </p>
 
-                <div className="flex items-center gap-2">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#25671E]/10 text-[#25671E]">
-                    {plan.id === PLAN_TIERS.FREE ? <Check className="h-5 w-5" /> : <Sparkles className="h-5 w-5" />}
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-wider text-zinc-500">{plan.cadenceLabel}</p>
-                    <h2 className="text-xl font-bold text-zinc-900">{plan.name}</h2>
-                  </div>
-                </div>
+            <div
+              className={`flex items-baseline gap-1 mb-1.5 font-['Playfair_Display',serif] ${plan.color === "pro" ? "text-green-950" : "text-green-700"}`}
+            >
+              {plan.price.monthly === 0 ? (
+                <span className="text-5xl font-black">Free</span>
+              ) : (
+                <>
+                  <span className="text-2xl font-semibold opacity-60">₹</span>
+                  <span className="text-6xl text-green-800 font-bold leading-none">
+                    {billing === "monthly"
+                      ? plan.price.monthly
+                      : plan.price.yearly}
+                  </span>
+                  <span className="text-sm font-['DM_Sans'] opacity-50 font-light">
+                    {billing === "monthly" ? "mo" : "yr"}
+                  </span>
+                </>
+              )}
+            </div>
 
-                <div className="mt-5">
-                  <p className="text-4xl font-black text-zinc-900">₹{plan.priceInr}</p>
-                  <p className="text-sm text-zinc-500">{plan.priceInr === 0 ? "No payment required" : "Per month"}</p>
-                </div>
+            <div
+              className={`h-px w-full my-6 ${plan.color === "pro" ? "bg-green-800/25" : "bg-green-400/35"}`}
+            />
 
-                <p className="mt-4 text-sm font-medium text-zinc-600">{plan.description}</p>
+            <ul className="flex-1 space-y-3 mb-8">
+              {plan.features.map((feature) => (
+                <li
+                  key={feature}
+                  className={`flex items-center gap-2.5 text-[13.5px] ${plan.color === "pro" ? "text-green-950" : "text-green-800"}`}
+                >
+                  <CheckIcon />
+                  {feature}
+                </li>
+              ))}
+            </ul>
 
-                <ul className="mt-5 space-y-2.5 text-sm text-zinc-700">
-                  {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-2">
-                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#25671E]" />
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
+            <button
+              onClick={() => handlePayment(plan, billing)}
+              className={`w-full py-3.5 cursor-pointer rounded-xl font-['DM_Sans'] text-sm font-semibold tracking-wide transition-all duration-200 relative overflow-hidden active:scale-95
+              ${
+                plan.color === "pro"
+                  ? "bg-gradient-to-br cursor-pointer from-green-900 to-green-800 text-green-50 shadow-lg shadow-green-900/30"
+                  : plan.color === "max"
+                    ? "bg-gradient-to-br cursor-pointer from-green-400 to-green-500 text-green-950 shadow-lg shadow-green-500/30"
+                    : "bg-gradient-to-br from-green-100 to-green-200 border border-green-300 text-green-700"
+              }`}
+            >
+              <div className="absolute inset-0 bg-black opacity-0 hover:opacity-5 transition-opacity" />
+              {plan.cta}
+            </button>
+          </div>
+        ))}
+      </div>
 
-                <form action={selectPlanAction} className="mt-7">
-                  <input type="hidden" name="tier" value={plan.id} />
-                  <button
-                    type="submit"
-                    disabled={isActive}
-                    className={`inline-flex w-full items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold transition-all ${
-                      isActive
-                        ? "cursor-not-allowed border border-zinc-200 bg-zinc-100 text-zinc-500"
-                        : plan.id === PLAN_TIERS.FREE
-                          ? "border border-zinc-300 bg-white text-zinc-700 hover:border-[#25671E]/30 hover:text-[#25671E]"
-                          : "bg-[#25671E] text-white hover:bg-[#1e5618]"
-                    }`}
-                  >
-                    {isActive ? "Current Plan" : `Choose ${plan.name}`}
-                  </button>
-                </form>
-              </article>
-            );
-          })}
-        </section>
-      </main>
+      <p className="relative z-10 mt-12 text-green-800/50 text-[13px] font-light text-center">
+        🔒 256-bit encryption · 30-day money-back guarantee · No credit card for
+        free tier
+      </p>
+
+      <style jsx global>{`
+        @keyframes shimmer {
+          0% {
+            transform: translateX(-100%);
+          }
+          100% {
+            transform: translateX(200%);
+          }
+        }
+      `}</style>
     </div>
   );
 }

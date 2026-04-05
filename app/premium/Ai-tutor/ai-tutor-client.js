@@ -35,16 +35,16 @@ export default function AiTutorClient() {
         parts: [{ text: msg.text }],
       }));
 
-      const res = await fetch("/api/auth/chat", {
+      const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: messageToSend, history }),
+        body: JSON.stringify({ prompt: messageToSend, history }),
       });
 
       const data = await res.json();
       setMessages([
         ...newMessages,
-        { role: "model", text: data.reply || `Error: ${data.error}` },
+        { role: "model", text: data.text || `Error: ${data.error}` },
       ]);
     } catch {
       setMessages([
@@ -76,7 +76,9 @@ export default function AiTutorClient() {
               <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#1b4332]">
                 <span className="text-xs font-bold text-white">V</span>
               </div>
-              <span className="text-[20px] font-semibold text-white">Vault</span>
+              <span className="text-[20px] font-semibold text-white">
+                Vault
+              </span>
             </div>
             <motion.button
               whileHover={{ scale: 1.1, rotate: 90 }}
@@ -99,7 +101,9 @@ export default function AiTutorClient() {
           </div>
 
           <nav className="flex flex-1 flex-col gap-1 px-3">
-            <p className="mb-2 px-2 font-bold uppercase tracking-widest text-white">Menu</p>
+            <p className="mb-2 px-2 font-bold uppercase tracking-widest text-white">
+              Menu
+            </p>
             <Link
               href="/user/library"
               className="flex items-center gap-2 rounded-lg px-3 py-2 text-[16px] text-white transition hover:bg-[#1b4332] hover:opacity-80"
@@ -131,10 +135,12 @@ export default function AiTutorClient() {
               <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#d1e8d4]">
                 <span className="text-3xl">🎓</span>
               </div>
-              <h2 className="mb-2 text-6xl font-semibold text-[#1b4332]">Hey, Student!</h2>
+              <h2 className="mb-2 text-6xl font-semibold text-[#1b4332]">
+                Hey, Student!
+              </h2>
               <p className="mb-8 mt-3 text-[16px] text-[#52796f]">
-                Ask me anything about your uploaded exam papers. I will explain topics, summarize
-                sections, and help you prepare.
+                Ask me anything about your uploaded exam papers. I will explain
+                topics, summarize sections, and help you prepare.
               </p>
             </div>
           )}

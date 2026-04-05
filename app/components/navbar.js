@@ -4,6 +4,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { signOut, useSession } from "next-auth/react";
 import { usePathname, useSearchParams } from "next/navigation";
+import Image from "next/image";
 import {
   Bookmark,
   ChevronDown,
@@ -17,15 +18,15 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-const MAIN_LINKS = [
+const BASE_MAIN_LINKS = [
+  { label: "My Dashboard", href: "/user/dashboard", icon: LayoutDashboard },
   { label: "Upload", href: "/user/uploads", matchPath: "/user/uploads" },
   { label: "Library", href: "/user/library", matchPath: "/user/library" },
   { label: "Leaderboard", href: "/user/leaderboard", matchPath: "/user/leaderboard" },
   { label: "Premium", href: "/premium/plan", hash: "#premium" },
 ];
 
-const ACCOUNT_LINKS = [
-  { label: "My Dashboard", href: "/user/dashboard", icon: LayoutDashboard },
+const BASE_ACCOUNT_LINKS = [
   { label: "My Wallet", href: "/user/wallet", icon: Wallet },
   { label: "My Profile", href: "/user/profile", icon: UserRound },
   { label: "My Uploads", href: "/user/uploads", icon: Upload },
@@ -34,10 +35,7 @@ const ACCOUNT_LINKS = [
 ];
 
 function getInitials(name) {
-  if (!name) {
-    return "U";
-  }
-
+  if (!name) return "U";
   const [first = "", second = ""] = name.trim().split(/\s+/);
   return `${first.charAt(0)}${second.charAt(0)}`.toUpperCase() || "U";
 }
@@ -48,12 +46,14 @@ export default function Navbar({ coins = 0 }) {
   const searchParams = useSearchParams();
 
   const [scrolled, setScrolled] = useState(false);
+  const [navVisible, setNavVisible] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [currentHash, setCurrentHash] = useState("");
   const [fetchedCoins, setFetchedCoins] = useState(null);
 
+  const lastScrollY = useRef(0);
   const mobileShellRef = useRef(null);
   const userMenuRef = useRef(null);
 
@@ -75,8 +75,10 @@ export default function Navbar({ coins = 0 }) {
 
   const loginHref = useMemo(
     () => `/user/login?callbackUrl=${encodeURIComponent(callbackUrl || "/")}`,
-    [callbackUrl]
+    [callbackUrl],
   );
+
+  const coinPillHref = isAuthenticated ? "/user/wallet" : loginHref;
 
   useEffect(() => {
     const syncHash = () => setCurrentHash(window.location.hash || "");
@@ -86,7 +88,23 @@ export default function Navbar({ coins = 0 }) {
   }, []);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
+    const onScroll = () => {
+      const currentY = window.scrollY;
+      const diff = currentY - lastScrollY.current;
+
+      if (diff < -5 || currentY < 60) {
+        setNavVisible(true);
+      } else if (diff > 5 && currentY > 60) {
+        setNavVisible(false);
+        // Close menus when navbar hides
+        setUserMenuOpen(false);
+        setMobileOpen(false);
+      }
+
+      setScrolled(currentY > 20);
+      lastScrollY.current = currentY;
+    };
+
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
@@ -130,11 +148,8 @@ export default function Navbar({ coins = 0 }) {
 
   useEffect(() => {
     const onResize = () => {
-      if (window.innerWidth >= 768) {
-        setMobileOpen(false);
-      }
+      if (window.innerWidth >= 768) setMobileOpen(false);
     };
-
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
@@ -142,7 +157,6 @@ export default function Navbar({ coins = 0 }) {
   useEffect(() => {
     function handleOutsideClick(event) {
       const target = event.target;
-
       if (
         mobileOpen &&
         mobileShellRef.current &&
@@ -150,7 +164,6 @@ export default function Navbar({ coins = 0 }) {
       ) {
         setMobileOpen(false);
       }
-
       if (
         userMenuOpen &&
         userMenuRef.current &&
@@ -169,7 +182,6 @@ export default function Navbar({ coins = 0 }) {
 
     document.addEventListener("mousedown", handleOutsideClick);
     document.addEventListener("keydown", handleEscape);
-
     return () => {
       document.removeEventListener("mousedown", handleOutsideClick);
       document.removeEventListener("keydown", handleEscape);
@@ -177,26 +189,15 @@ export default function Navbar({ coins = 0 }) {
   }, [mobileOpen, userMenuOpen]);
 
   const isMainLinkActive = (link) => {
-    if (link.matchPath) {
-      return pathname?.startsWith(link.matchPath);
-    }
-
-    if (pathname !== "/") {
-      return false;
-    }
-
-    if (link.hash === "#hero") {
+    if (link.matchPath) return pathname?.startsWith(link.matchPath);
+    if (pathname !== "/") return false;
+    if (link.hash === "#hero")
       return currentHash === "" || currentHash === "#hero";
-    }
-
     return currentHash === link.hash;
   };
 
   async function handleSignOut() {
-    if (loggingOut) {
-      return;
-    }
-
+    if (loggingOut) return;
     setLoggingOut(true);
     await signOut({ callbackUrl: "/" });
   }
@@ -205,8 +206,11 @@ export default function Navbar({ coins = 0 }) {
     <motion.header
       className="fixed inset-x-0 top-0 z-50"
       initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+      animate={{
+        opacity: 1,
+        y: navVisible ? 0 : -100,
+      }}
+      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
     >
       <div className="px-4 sm:px-6 lg:px-8">
         <div
@@ -222,23 +226,24 @@ export default function Navbar({ coins = 0 }) {
               : "0 2px 16px rgba(37,103,30,0.07)",
           }}
         >
-          {/* Main Row */}
           <div className="flex items-center justify-between py-2.5">
-            {/* ── Logo ── */}
-            <Link href="/#hero" className="group flex items-center gap-2.5 no-underline">
-              <div
-                className="flex h-9 w-9 items-center justify-center rounded-xl shadow-sm transition-transform duration-200 group-hover:rotate-[-5deg] group-hover:scale-105"
-                style={{ background: "#25671E" }}
-              >
-                <span className="text-base">🔐</span>
-              </div>
+            <Link
+              href="/#hero"
+              className="group flex items-center gap-2.5 no-underline"
+            >
+              <Image
+                src="/logo.png"
+                alt="Word Vault Logo"
+                width={50}
+                height={50}
+              />
+
               <span
                 className="text-[15px] font-bold tracking-widest"
                 style={{ color: "#25671E" }}
               >
                 VAULT
               </span>
-              {/* Live badge */}
               <span
                 className="hidden sm:inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-wide"
                 style={{
@@ -255,29 +260,17 @@ export default function Navbar({ coins = 0 }) {
               </span>
             </Link>
 
-            {/* ── Desktop Nav ── */}
             <nav className="hidden md:flex items-center gap-1">
-              {MAIN_LINKS.map((link) => (
+              {mainLinks.map((link) => (
                 <Link
                   key={link.label}
                   href={link.href}
-                  className="relative px-3.5 py-1.5 rounded-full text-[13px] font-medium transition-all duration-150 no-underline"
+                  className="relative rounded-full px-3.5 py-1.5 text-[13px] font-medium no-underline transition-all duration-150"
                   style={{
                     color: isMainLinkActive(link) ? "#25671E" : "#4a7244",
-                    background:
-                      isMainLinkActive(link)
-                        ? "rgba(37,103,30,0.1)"
-                        : "transparent",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isMainLinkActive(link)) {
-                      e.currentTarget.style.background = "rgba(37,103,30,0.06)";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isMainLinkActive(link)) {
-                      e.currentTarget.style.background = "transparent";
-                    }
+                    background: isMainLinkActive(link)
+                      ? "rgba(37,103,30,0.1)"
+                      : "transparent",
                   }}
                 >
                   {link.label}
@@ -285,7 +278,6 @@ export default function Navbar({ coins = 0 }) {
               ))}
             </nav>
 
-            {/* ── Right — Coin + CTAs ── */}
             <div className="flex items-center gap-2" ref={mobileShellRef}>
               {/* Coin pill — visible sm+ */}
               <Link
@@ -294,14 +286,6 @@ export default function Navbar({ coins = 0 }) {
                 style={{
                   background: "rgba(255,255,255,0.8)",
                   border: "1px solid rgba(242,181,11,0.45)",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "rgba(242,181,11,0.07)";
-                  e.currentTarget.style.borderColor = "rgba(242,181,11,0.65)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "rgba(255,255,255,0.8)";
-                  e.currentTarget.style.borderColor = "rgba(242,181,11,0.45)";
                 }}
               >
                 <div
@@ -356,23 +340,12 @@ export default function Navbar({ coins = 0 }) {
                   >
                     Sign In
                   </Link>
-
                   <Link
                     href={loginHref}
                     className="hidden md:inline-flex rounded-full px-4 py-1.75 text-[13px] font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 active:scale-95 no-underline"
                     style={{
                       background: "#25671E",
                       boxShadow: "0 2px 10px rgba(37,103,30,0.30)",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = "#1e5618";
-                      e.currentTarget.style.boxShadow =
-                        "0 4px 16px rgba(37,103,30,0.4)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = "#25671E";
-                      e.currentTarget.style.boxShadow =
-                        "0 2px 10px rgba(37,103,30,0.30)";
                     }}
                   >
                     Sign Up Free
@@ -396,11 +369,10 @@ export default function Navbar({ coins = 0 }) {
                     aria-haspopup="menu"
                     aria-label="Toggle user menu"
                   >
-                    {session?.user?.image ? (
-                      // Google avatar URLs are external; plain img avoids extra config for remote patterns.
+                    {displayAvatar ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
-                        src={session.user.image}
+                        src={displayAvatar}
                         alt={`${displayName} profile`}
                         className="h-8 w-8 rounded-full object-cover"
                       />
@@ -442,11 +414,16 @@ export default function Navbar({ coins = 0 }) {
                           className="rounded-xl px-3 py-3"
                           style={{ background: "rgba(37,103,30,0.06)" }}
                         >
-                          <p className="text-sm font-semibold" style={{ color: "#25671E" }}>
+                          <p
+                            className="text-sm font-semibold"
+                            style={{ color: "#25671E" }}
+                          >
                             {displayName}
                           </p>
                           {displayEmail ? (
-                            <p className="mt-0.5 text-xs text-zinc-500 break-all">{displayEmail}</p>
+                            <p className="mt-0.5 break-all text-xs text-zinc-500">
+                              {displayEmail}
+                            </p>
                           ) : null}
                           <div className="mt-2 flex items-center gap-2 text-[11px]">
                             <span
@@ -456,7 +433,7 @@ export default function Navbar({ coins = 0 }) {
                                 background: "rgba(242,181,11,0.2)",
                               }}
                             >
-                              Coins: {displayCoins}
+                              Coins: {displayCoins.toLocaleString()}
                             </span>
                             <span
                               className="rounded-full px-2 py-1 font-semibold"
@@ -465,27 +442,24 @@ export default function Navbar({ coins = 0 }) {
                                 background: "rgba(37,103,30,0.15)",
                               }}
                             >
-                              {session?.user?.isPremium ? "Premium" : "Free"}
+                              {isPremiumMember ? "Premium" : "Free"}
                             </span>
                           </div>
                         </div>
 
                         <div className="mt-2 flex flex-col gap-1">
-                          {ACCOUNT_LINKS.map(({ label, href, icon: Icon }) => (
+                          {accountLinks.map(({ label, href, icon: Icon }) => (
                             <Link
                               key={label}
                               href={href}
                               className="flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-medium no-underline transition-colors"
                               style={{ color: "#2f4a2d" }}
                               onClick={() => setUserMenuOpen(false)}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.background = "rgba(37,103,30,0.08)";
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.background = "transparent";
-                              }}
                             >
-                              <Icon className="h-4 w-4" style={{ color: "#25671E" }} />
+                              <Icon
+                                className="h-4 w-4"
+                                style={{ color: "#25671E" }}
+                              />
                               {label}
                             </Link>
                           ))}
@@ -511,7 +485,6 @@ export default function Navbar({ coins = 0 }) {
                 </div>
               ) : null}
 
-              {/* Hamburger — mobile only */}
               <button
                 type="button"
                 className="md:hidden flex flex-col justify-center items-center gap-1.25 p-2 rounded-xl transition-all duration-150"
@@ -551,7 +524,6 @@ export default function Navbar({ coins = 0 }) {
             </div>
           </div>
 
-          {/* ── Mobile Menu ── */}
           <AnimatePresence>
             {mobileOpen && (
               <motion.div
@@ -563,30 +535,28 @@ export default function Navbar({ coins = 0 }) {
                 className="overflow-hidden md:hidden"
               >
                 <div
-                  className="flex flex-col gap-1 pt-2 pb-3 border-t"
+                  className="flex flex-col gap-1 border-t pb-3 pt-2"
                   style={{ borderColor: "rgba(37,103,30,0.1)" }}
                 >
-                  {MAIN_LINKS.map((link) => (
+                  {mainLinks.map((link) => (
                     <Link
                       key={link.label}
                       href={link.href}
                       onClick={() => setMobileOpen(false)}
-                      className="px-3 py-2.5 rounded-xl text-sm font-medium no-underline transition-colors duration-150"
+                      className="rounded-xl px-3 py-2.5 text-sm font-medium no-underline transition-colors duration-150"
                       style={{
                         color: isMainLinkActive(link) ? "#25671E" : "#4a7244",
-                        background:
-                          isMainLinkActive(link)
-                            ? "rgba(37,103,30,0.08)"
-                            : "transparent",
+                        background: isMainLinkActive(link)
+                          ? "rgba(37,103,30,0.08)"
+                          : "transparent",
                       }}
                     >
                       {link.label}
                     </Link>
                   ))}
 
-                  {/* Mobile coin display */}
                   <div
-                    className="flex items-center gap-2 px-3 py-2 mt-1 rounded-xl"
+                    className="mt-1 flex items-center gap-2 rounded-xl px-3 py-2"
                     style={{ background: "rgba(242,181,11,0.07)" }}
                   >
                     <span className="text-base">🪙</span>
@@ -597,7 +567,7 @@ export default function Navbar({ coins = 0 }) {
                       Your coins:
                     </span>
                     <span
-                      className="text-sm font-bold tabular-nums ml-auto"
+                      className="ml-auto text-sm font-bold tabular-nums"
                       style={{ color: "#25671E" }}
                     >
                       {displayCoins.toLocaleString()}
@@ -610,19 +580,24 @@ export default function Navbar({ coins = 0 }) {
                         className="mt-1 rounded-xl p-3"
                         style={{ background: "rgba(37,103,30,0.08)" }}
                       >
-                        <p className="text-sm font-semibold" style={{ color: "#25671E" }}>
+                        <p
+                          className="text-sm font-semibold"
+                          style={{ color: "#25671E" }}
+                        >
                           {displayName}
                         </p>
                         {displayEmail ? (
-                          <p className="mt-0.5 text-xs text-zinc-500 break-all">{displayEmail}</p>
+                          <p className="mt-0.5 break-all text-xs text-zinc-500">
+                            {displayEmail}
+                          </p>
                         ) : null}
                         <p className="mt-1 text-xs font-medium text-zinc-600">
-                          {session?.user?.isPremium ? "Premium Member" : "Free Member"}
+                          {isPremiumMember ? "Premium Member" : "Free Member"}
                         </p>
                       </div>
 
                       <div className="mt-1 flex flex-col gap-1">
-                        {ACCOUNT_LINKS.map(({ label, href, icon: Icon }) => (
+                        {accountLinks.map(({ label, href, icon: Icon }) => (
                           <Link
                             key={label}
                             href={href}
@@ -630,7 +605,10 @@ export default function Navbar({ coins = 0 }) {
                             className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium no-underline transition-colors duration-150"
                             style={{ color: "#2f4a2d" }}
                           >
-                            <Icon className="h-4 w-4" style={{ color: "#25671E" }} />
+                            <Icon
+                              className="h-4 w-4"
+                              style={{ color: "#25671E" }}
+                            />
                             {label}
                           </Link>
                         ))}
@@ -651,11 +629,11 @@ export default function Navbar({ coins = 0 }) {
                       </button>
                     </>
                   ) : (
-                    <div className="flex gap-2 mt-1">
+                    <div className="mt-1 flex gap-2">
                       <Link
                         href={loginHref}
                         onClick={() => setMobileOpen(false)}
-                        className="flex-1 rounded-full py-2 text-center text-sm font-semibold transition-colors no-underline"
+                        className="flex-1 rounded-full py-2 text-center text-sm font-semibold no-underline transition-colors"
                         style={{
                           border: "1px solid rgba(37,103,30,0.22)",
                           color: "#25671E",

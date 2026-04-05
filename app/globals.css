@@ -1,19 +1,1 @@
 @import "tailwindcss";
-
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-body {
-  background: #f8fafc;
-  color: #171717;
-  font-family: var(--font-geist-sans), "Segoe UI", "Helvetica Neue", sans-serif;
-}
